@@ -1,0 +1,13 @@
+com\sts\auth\dto\LoginResponse.class
+com\sts\auth\controller\AuthController.class
+com\sts\auth\dto\ForgotPasswordRequest.class
+com\sts\auth\entity\User$UserBuilder.class
+com\sts\auth\service\AuthService.class
+com\sts\auth\repository\UserRepository.class
+com\sts\auth\dto\LoginRequest.class
+com\sts\auth\config\WebConfig.class
+com\sts\auth\entity\User$Role.class
+com\sts\auth\AuthServiceApplication.class
+com\sts\auth\dto\RegisterRequest.class
+com\sts\auth\dto\LoginResponse$LoginResponseBuilder.class
+com\sts\auth\entity\User.class

@@ -1,0 +1,194 @@
+<div class="register-wrapper flex-center">
+  <div class="card register-card">
+    <div class="text-center mb-4">
+      <h1 class="gradient-text logo-title">Join SwiftLink</h1>
+      <p class="subtitle mt-1">Field Engineer Task Management Portal</p>
+    </div>
+    
+    <div class="error-alert" *ngIf="errorMessage">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
+        <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+    
+    <div class="success-alert" *ngIf="successMessage">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
+        <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+      </svg>
+      <span>{{ successMessage }}</span>
+    </div>
+    
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-grid">
+        <!-- Basic Info -->
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            class="form-control" 
+            placeholder="John Doe" 
+            [(ngModel)]="user.name" 
+            required
+            #nameInput="ngModel"
+          >
+          <span class="field-error" *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)">
+            Name is required.
+          </span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-control" 
+            placeholder="john@sts.com" 
+            [(ngModel)]="user.email" 
+            required 
+            email
+            #emailInput="ngModel"
+          >
+          <span class="field-error" *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)">
+            Please enter a valid email address.
+          </span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-control" 
+            placeholder="Min 6 characters" 
+            [(ngModel)]="user.password" 
+            required
+            minlength="6"
+            #passwordInput="ngModel"
+          >
+          <span class="field-error" *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)">
+            Password must be at least 6 characters.
+          </span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Confirm Password</label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            name="confirmPassword" 
+            class="form-control" 
+            placeholder="Repeat password" 
+            [(ngModel)]="user.confirmPassword" 
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input 
+            type="text" 
+            id="phone" 
+            name="phone" 
+            class="form-control" 
+            placeholder="10 digit number" 
+            [(ngModel)]="user.phone" 
+            required
+            pattern="[0-9]{10}"
+            #phoneInput="ngModel"
+          >
+          <span class="field-error" *ngIf="phoneInput.invalid && (phoneInput.dirty || phoneInput.touched)">
+            Enter a valid 10-digit phone number.
+          </span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="role">Register As</label>
+          <select id="role" name="role" class="form-control" [(ngModel)]="user.role">
+            <option value="USER">User (Raise Tickets)</option>
+            <option value="ENGINEER">Field Engineer</option>
+            <option value="ADMIN">Administrator</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="address">Address / Office Area</label>
+        <input 
+          type="text" 
+          id="address" 
+          name="address" 
+          class="form-control" 
+          placeholder="E.g., Koramangala 4th Block, Bangalore" 
+          [(ngModel)]="user.address" 
+          required
+        >
+      </div>
+
+      <!-- Security Question - FR5 -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="securityQuestion">Security Question</label>
+          <select id="securityQuestion" name="securityQuestion" class="form-control" [(ngModel)]="user.securityQuestion">
+            <option value="What is your pet name?">What is your pet name?</option>
+            <option value="What city were you born in?">What city were you born in?</option>
+            <option value="What is your favorite color?">What is your favorite color?</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="securityAnswer">Security Answer</label>
+          <input 
+            type="text" 
+            id="securityAnswer" 
+            name="securityAnswer" 
+            class="form-control" 
+            placeholder="Answer for recovery" 
+            [(ngModel)]="user.securityAnswer" 
+            required
+          >
+        </div>
+      </div>
+
+      <!-- Engineer-Specific Fields - FR4 -->
+      <div class="engineer-fields card mb-3" *ngIf="user.role === 'ENGINEER'">
+        <h3 class="mb-2 text-info">Engineer Profile Details</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="specialization">Specialization</label>
+            <select id="specialization" name="specialization" class="form-control" [(ngModel)]="user.specialization">
+              <option value="Fiber">Fiber Optic Cable laying</option>
+              <option value="Copper">Copper fault rectifying</option>
+              <option value="Installation">Service Installation</option>
+              <option value="General">General Maintenance</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="homeLocation">Home Area (Bangalore)</label>
+            <select id="homeLocation" name="homeLocation" class="form-control" [(ngModel)]="user.homeLocation">
+              <option *ngFor="let area of bangaloreAreas" [value]="area">{{ area }}</option>
+            </select>
+          </div>
+        </div>
+        <p class="desc text-muted">Note: System will automatically map your home base coordinates to locate tasks near you.</p>
+      </div>
+      
+      <button type="submit" class="btn btn-primary w-100" [disabled]="registerForm.invalid || isLoading">
+        <span *ngIf="!isLoading">Register Account</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
+    </form>
+    
+    <div class="text-center mt-4">
+      <p class="login-text">
+        Already have an account? 
+        <a routerLink="/login" class="login-link">Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>

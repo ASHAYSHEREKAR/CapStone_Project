@@ -1,0 +1,136 @@
+import { Component } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
+import { EngineerService } from '../../services/engineer.service';
+import CryptoJS from 'crypto-js';
+
+// Coordinates dictionary for Bangalore areas
+const BANGALORE_COORDINATES: { [key: string]: { lat: number; lng: number } } = {
+  'Koramangala': { lat: 12.9352, lng: 77.6245 },
+  'Whitefield': { lat: 12.9698, lng: 77.7500 },
+  'Jayanagar': { lat: 12.9250, lng: 77.5938 },
+  'Electronic City': { lat: 12.8440, lng: 77.6760 },
+  'HSR Layout': { lat: 12.9121, lng: 77.6446 },
+  'Indiranagar': { lat: 12.9784, lng: 77.6408 },
+  'JP Nagar': { lat: 12.8912, lng: 77.5853 },
+  'Marathahalli': { lat: 12.9591, lng: 77.7009 },
+  'MG Road': { lat: 12.9756, lng: 77.6010 },
+  'Hebbal': { lat: 13.0358, lng: 77.5970 },
+  'Yelahanka': { lat: 13.1007, lng: 77.5963 }
+};
+
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './register.html',
+  styleUrls: ['./register.css']
+})
+export class RegisterComponent {
+  user = {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'USER',
+    phone: '',
+    address: '',
+    securityQuestion: 'What is your pet name?',
+    securityAnswer: '',
+    // Engineer-specific fields
+    specialization: 'General',
+    homeLocation: 'Koramangala'
+  };
+
+  bangaloreAreas = Object.keys(BANGALORE_COORDINATES);
+  errorMessage: string | null = null;
+  successMessage: string | null = null;
+  isLoading = false;
+
+  constructor(
+    private authService: AuthService,
+    private engineerService: EngineerService,
+    private router: Router
+  ) {}
+
+  onSubmit(): void {
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    if (this.user.password !== this.user.confirmPassword) {
+      this.errorMessage = 'Passwords do not match.';
+      return;
+    }
+
+    this.isLoading = true;
+
+    // Encrypt password using SHA-256 (NFR1)
+    const encryptedPassword = CryptoJS.SHA256(this.user.password).toString();
+
+    // 1. Register user in Auth service
+    const registerData = {
+      name: this.user.name,
+      email: this.user.email,
+      password: encryptedPassword,
+      role: this.user.role,
+      phone: this.user.phone,
+      address: this.user.address,
+      securityQuestion: this.user.securityQuestion,
+      securityAnswer: this.user.securityAnswer
+    };
+
+    this.authService.register(registerData).subscribe({
+      next: (res) => {
+        if (res && res.includes('Email already registered')) {
+          this.errorMessage = res;
+          this.isLoading = false;
+          return;
+        }
+
+        // 2. If registering as an ENGINEER, also register in Engineer service
+        if (this.user.role === 'ENGINEER') {
+          const coords = BANGALORE_COORDINATES[this.user.homeLocation] || { lat: 12.9716, lng: 77.5946 };
+          const engineerData = {
+            name: this.user.name,
+            email: this.user.email,
+            password: encryptedPassword,
+            specialization: this.user.specialization,
+            homeLocation: this.user.homeLocation,
+            homeLatitude: coords.lat,
+            homeLongitude: coords.lng,
+            workload: 0,
+            isAvailable: true
+          };
+
+          this.engineerService.createEngineer(engineerData).subscribe({
+            next: () => {
+              this.handleRegistrationSuccess();
+            },
+            error: (err) => {
+              this.isLoading = false;
+              this.errorMessage = 'Auth succeeded, but failed to create engineer profile. Please contact admin.';
+              console.error('Engineer profile creation error:', err);
+            }
+          });
+        } else {
+          this.handleRegistrationSuccess();
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = 'Registration failed. Please try again.';
+        console.error('Registration error:', err);
+      }
+    });
+  }
+
+  private handleRegistrationSuccess(): void {
+    this.isLoading = false;
+    this.successMessage = 'Registration successful! Redirecting to login...';
+    setTimeout(() => {
+      this.router.navigate(['/login']);
+    }, 2000);
+  }
+}

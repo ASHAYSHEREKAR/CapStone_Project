@@ -1,0 +1,205 @@
+.dashboard-wrapper {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.desc {
+  font-size: 0.95rem;
+}
+
+.new-assignment-notification {
+  background: rgba(255, 23, 68, 0.05);
+  border: 1px solid rgba(255, 23, 68, 0.3);
+  padding: 1.25rem;
+  animation: pulse-notify 2s infinite alternate;
+}
+
+@keyframes pulse-notify {
+  from { border-color: rgba(255, 23, 68, 0.3); box-shadow: 0 0 10px rgba(255, 23, 68, 0.1); }
+  to { border-color: rgba(255, 23, 68, 0.6); box-shadow: 0 0 20px rgba(255, 23, 68, 0.3); }
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-info .name {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.workload-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.5rem;
+}
+
+.detail-label {
+  color: var(--text-secondary);
+}
+
+.detail-val {
+  color: var(--text-primary);
+}
+
+.pending-list, .active-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pending-item, .active-item {
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.pending-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.type-tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(255, 23, 68, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(255, 23, 68, 0.2);
+}
+
+.type-tag.installation {
+  background: rgba(0, 176, 255, 0.1);
+  color: var(--info);
+  border: 1px solid rgba(0, 176, 255, 0.2);
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gap-1 {
+  gap: 1rem;
+}
+
+.w-50 {
+  width: calc(50% - 0.5rem);
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.ms-1 { margin-left: 0.25rem; }
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  padding: 1.5rem;
+}
+
+.modal-card {
+  max-width: 550px;
+  width: 100%;
+  padding: 2rem;
+  animation: modal-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.75rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.btn-close:hover {
+  color: var(--danger);
+}
+
+.ticket-summary {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border: 1px solid var(--glass-border);
+}
+
+textarea.form-control {
+  resize: vertical;
+}
+
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 230, 118, 0.1);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+  color: var(--success);
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 1.5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(11, 12, 16, 0.3);
+  border-top-color: #0b0c10;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes modal-appear {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}

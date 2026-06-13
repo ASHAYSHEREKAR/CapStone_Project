@@ -1,0 +1,121 @@
+.map-container {
+  width: 100%;
+  height: 100%;
+  min-height: 350px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Custom Marker Pin Styling */
+.custom-leaflet-icon-container {
+  background: transparent;
+  border: none;
+}
+
+.custom-map-pin {
+  width: 36px;
+  height: 36px;
+  background-color: var(--pin-color);
+  border-radius: 50% 50% 50% 0;
+  position: relative;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  border: 2px solid #fff;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.custom-map-pin:hover {
+  transform: rotate(-45deg) scale(1.15);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  z-index: 99999 !important;
+}
+
+.pin-symbol {
+  transform: rotate(45deg);
+  font-size: 16px;
+  user-select: none;
+}
+
+.pin-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  border-radius: 50%;
+  border: 3px solid var(--pulse-color);
+  top: -2px;
+  left: -2px;
+  box-sizing: content-box;
+  animation: pinPulse 2s infinite ease-out;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes pinPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Popup Customization to match dark premium theme */
+::ng-deep .leaflet-popup-content-wrapper {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-card) !important;
+  border-radius: var(--border-radius-sm) !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: var(--font-body) !important;
+  font-size: 13px !important;
+  padding: 4px !important;
+}
+
+::ng-deep .leaflet-popup-tip {
+  background: var(--bg-secondary) !important;
+  border-left: 1px solid var(--border-card) !important;
+  border-bottom: 1px solid var(--border-card) !important;
+}
+
+::ng-deep .leaflet-popup-close-button {
+  color: var(--text-muted) !important;
+  font-size: 16px !important;
+  padding: 6px !important;
+}
+
+::ng-deep .leaflet-popup-close-button:hover {
+  color: var(--accent) !important;
+}
+
+.map-popup-content {
+  line-height: 1.5;
+}
+
+.map-popup-content h4 {
+  font-family: var(--font-title);
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.map-popup-content p {
+  margin: 2px 0;
+  color: var(--text-secondary);
+}
+
+.map-popup-content strong {
+  color: var(--text-primary);
+}

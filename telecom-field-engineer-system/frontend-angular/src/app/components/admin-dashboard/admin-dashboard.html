@@ -1,0 +1,323 @@
+<div class="dashboard-wrapper container">
+  <!-- Success Notification -->
+  <div class="success-banner" *ngIf="successMessage">
+    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
+      <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+    </svg>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div class="dashboard-header mb-4">
+    <div>
+      <h1 class="gradient-text">Admin Command Center</h1>
+      <p class="desc text-secondary mt-1">Dispatches, field workload stats, and compliance monitoring</p>
+    </div>
+    <div class="alert-indicator flex-center" *ngIf="stats.alerts > 0" (click)="setTab('ALERTS')">
+      <span class="pulse-dot"></span>
+      <span class="alert-count">{{ stats.alerts }} System Alerts</span>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid mb-4">
+    <div class="card stat-card" (click)="setTab('TICKETS'); statusFilter = 'ALL'; applyFilter()">
+      <span class="stat-label">Total Tickets</span>
+      <span class="stat-val gradient-text">{{ stats.total }}</span>
+    </div>
+    <div class="card stat-card" (click)="setTab('TICKETS'); statusFilter = 'OPEN'; applyFilter()">
+      <span class="stat-label">Open / Unassigned</span>
+      <span class="stat-val text-info">{{ stats.open }}</span>
+    </div>
+    <div class="card stat-card" (click)="setTab('TICKETS'); statusFilter = 'IN_PROGRESS'; applyFilter()">
+      <span class="stat-label">Active Work</span>
+      <span class="stat-val text-warning">{{ stats.inProgress }}</span>
+    </div>
+    <div class="card stat-card" (click)="setTab('TICKETS'); statusFilter = 'SUCCESS'; applyFilter()">
+      <span class="stat-label">Completed Tasks</span>
+      <span class="stat-val text-success">{{ stats.success }}</span>
+    </div>
+    <div class="card stat-card alert-card" (class.alert-active)="stats.alerts > 0" (click)="setTab('ALERTS')">
+      <span class="stat-label">Failed / Deferred</span>
+      <span class="stat-val text-danger">{{ stats.alerts }}</span>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-container mb-3">
+    <button class="tab-btn" [class.active]="currentTab === 'TICKETS'" (click)="setTab('TICKETS')">Tickets Management</button>
+    <button class="tab-btn" [class.active]="currentTab === 'ENGINEERS'" (click)="setTab('ENGINEERS')">Technicians Directory</button>
+    <button class="tab-btn alert-tab" [class.active]="currentTab === 'ALERTS'" (click)="setTab('ALERTS')">
+      Alerts Log
+      <span class="badge badge-danger ms-1" *ngIf="stats.alerts > 0">{{ stats.alerts }}</span>
+    </button>
+  </div>
+
+  <!-- Loading / Error -->
+  <div class="error-alert mb-3" *ngIf="errorMessage">
+    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
+      <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+    </svg>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- TAB 1: TICKETS MANAGEMENT -->
+  <div *ngIf="currentTab === 'TICKETS'">
+    <div class="filter-bar mb-3">
+      <label class="form-label d-inline me-2" for="statusFilter">Status Filter:</label>
+      <select id="statusFilter" class="form-control d-inline w-auto" [(ngModel)]="statusFilter" (change)="applyFilter()">
+        <option value="ALL">All States</option>
+        <option value="OPEN">OPEN (Unassigned)</option>
+        <option value="ASSIGNED">ASSIGNED (Pending response)</option>
+        <option value="ACCEPTED">ACCEPTED (Waiting to start)</option>
+        <option value="IN_PROGRESS">IN PROGRESS</option>
+        <option value="SUCCESS">SUCCESS (Resolved)</option>
+        <option value="FAILURE">FAILURE (Malfunction/Fault)</option>
+        <option value="DEFERRED">DEFERRED (On hold)</option>
+      </select>
+    </div>
+
+    <div class="card p-0">
+      <div class="loading-state flex-center py-5" *ngIf="isLoading">
+        <span class="spinner"></span>
+        <span class="ms-2 text-secondary">Loading ticket records...</span>
+      </div>
+
+      <div class="empty-state text-center py-5" *ngIf="!isLoading && filteredTickets.length === 0">
+        <p class="text-secondary font-weight-bold">No tickets match this criteria.</p>
+      </div>
+
+      <div class="table-responsive" *ngIf="!isLoading && filteredTickets.length > 0">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th>Location</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Technician</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of filteredTickets">
+              <td>#{{ t.ticketId }}</td>
+              <td>{{ t.userName }}</td>
+              <td>
+                <span class="type-tag" [class.installation]="t.ticketType === 'INSTALLATION'">
+                  {{ t.ticketType }}
+                </span>
+              </td>
+              <td>{{ t.location }}</td>
+              <td><span class="badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span></td>
+              <td><span class="badge" [ngClass]="getStatusClass(t.status)">{{ t.status }}</span></td>
+              <td>{{ t.engineerName || 'Unassigned' }}</td>
+              <td>
+                <button 
+                  class="btn btn-accent btn-sm" 
+                  *ngIf="t.status === 'OPEN'"
+                  (click)="openAssignModal(t)"
+                >
+                  Assign
+                </button>
+                <button 
+                  class="btn btn-danger btn-sm" 
+                  *ngIf="t.status === 'DEFERRED'"
+                  (click)="openAssignModal(t)"
+                >
+                  Reassign
+                </button>
+                <span class="text-muted text-sm" *ngIf="t.status !== 'OPEN' && t.status !== 'DEFERRED'">
+                  No actions required
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: TECHNICIANS DIRECTORY -->
+  <div *ngIf="currentTab === 'ENGINEERS'">
+    <div class="card p-0">
+      <div class="loading-state flex-center py-5" *ngIf="isLoading">
+        <span class="spinner"></span>
+        <span class="ms-2 text-secondary">Loading technician profiles...</span>
+      </div>
+
+      <div class="table-responsive" *ngIf="!isLoading">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Specialization</th>
+              <th>Base Location</th>
+              <th>Workload</th>
+              <th>Holidays</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of engineers">
+              <td>#{{ e.engineerId }}</td>
+              <td>{{ e.name }} <br><span class="text-xs text-muted">{{ e.email }}</span></td>
+              <td>{{ e.specialization || 'General' }}</td>
+              <td>{{ e.homeLocation }}</td>
+              <td>
+                <span class="workload-dot" [class.heavy]="e.workload >= 3" [class.medium]="e.workload === 2" [class.light]="e.workload < 2"></span>
+                {{ e.workload }} Active
+              </td>
+              <td>
+                <span class="text-warning text-sm" *ngIf="e.holidayStart && e.holidayEnd">
+                  {{ e.holidayStart }} to {{ e.holidayEnd }}
+                </span>
+                <span class="text-muted text-sm" *ngIf="!e.holidayStart">No upcoming leave</span>
+              </td>
+              <td>
+                <span class="badge" [class.badge-success]="e.isAvailable" [class.badge-danger]="!e.isAvailable">
+                  {{ e.isAvailable ? 'Available' : 'Unavailable' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: ALERTS LOG -->
+  <div *ngIf="currentTab === 'ALERTS'">
+    <div class="alert-info-box card mb-3" *ngIf="stats.alerts > 0">
+      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 960 960 960" width="24" fill="currentColor" class="text-danger">
+        <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+      </svg>
+      <div>
+        <p class="font-weight-bold text-danger">Action Required: Failed or Deferred Tasks</p>
+        <p class="text-secondary text-sm">Below are tickets that field engineers could not resolve due to structural hazards or lack of components. Reassignment is highly recommended.</p>
+      </div>
+    </div>
+
+    <div class="card p-0">
+      <div class="empty-state text-center py-5" *ngIf="alertTickets.length === 0">
+        <svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 960 960 960" width="48" fill="currentColor" class="text-success mb-2">
+          <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+        </svg>
+        <p class="text-success font-weight-bold">System Running Clear</p>
+        <p class="text-muted mt-1">No failed or deferred tasks currently require intervention.</p>
+      </div>
+
+      <div class="table-responsive" *ngIf="alertTickets.length > 0">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th>Location</th>
+              <th>Issue Type</th>
+              <th>Notes / Reason</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of alertTickets" class="alert-row">
+              <td>#{{ t.ticketId }}</td>
+              <td>{{ t.userName }}</td>
+              <td>
+                <span class="type-tag" [class.installation]="t.ticketType === 'INSTALLATION'">
+                  {{ t.ticketType }}
+                </span>
+              </td>
+              <td>{{ t.location }}</td>
+              <td>
+                <span class="badge" [class.badge-danger]="t.status === 'FAILURE'" [class.badge-warning]="t.status === 'DEFERRED'">
+                  {{ t.status }}
+                </span>
+              </td>
+              <td class="notes-cell">{{ t.adminNotes || 'No description supplied' }}</td>
+              <td>
+                <button class="btn btn-accent btn-sm" (click)="openAssignModal(t)">Reassign</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISPATCH ASSIGNMENT MODAL -->
+  <div class="modal-backdrop flex-center" *ngIf="selectedTicket">
+    <div class="card modal-card">
+      <div class="modal-header">
+        <h2 class="gradient-text">{{ selectedTicket.status === 'DEFERRED' ? 'Reassign' : 'Assign' }} Ticket #{{ selectedTicket.ticketId }}</h2>
+        <button class="btn-close" (click)="closeAssignModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="ticket-summary card mb-3">
+          <p class="text-sm"><span class="text-muted">Type:</span> <strong>{{ selectedTicket.ticketType }}</strong></p>
+          <p class="text-sm"><span class="text-muted">Location:</span> <strong>{{ selectedTicket.location }}</strong></p>
+          <p class="text-sm"><span class="text-muted">Description:</span> {{ selectedTicket.description }}</p>
+        </div>
+
+        <!-- Matching Factor dispatch algorithm visualizer - FR13 -->
+        <div class="dispatch-recommendation mb-4">
+          <button type="button" class="btn btn-primary w-100" (click)="findBestMatch()" [disabled]="isMatchingLoading">
+            <span *ngIf="!isMatchingLoading">Run Matching Algorithm (FR13)</span>
+            <span *ngIf="isMatchingLoading" class="spinner"></span>
+          </button>
+          
+          <div class="recommendation-result card mt-3" *ngIf="recommendedEngineer">
+            <h3 class="text-success text-sm mb-2">Recommended Field Engineer</h3>
+            <p class="name font-weight-bold">{{ recommendedEngineer.name }}</p>
+            
+            <div class="factors mt-2">
+              <div class="factor">
+                <span class="f-label">Workload:</span>
+                <span class="f-val badge" [class.badge-success]="recommendedEngineer.workload < 2" [class.badge-warning]="recommendedEngineer.workload === 2">
+                  {{ recommendedEngineer.workload }} active tasks
+                </span>
+              </div>
+              <div class="factor" *ngIf="selectedTicket.latitude && recommendedEngineer.homeLatitude">
+                <span class="f-label">Estimated Distance:</span>
+                <span class="f-val text-info">
+                  {{ getDistance(selectedTicket.latitude, selectedTicket.longitude || 0, recommendedEngineer.homeLatitude, recommendedEngineer.homeLongitude || 0) }}
+                </span>
+              </div>
+              <div class="factor">
+                <span class="f-label">Specialization:</span>
+                <span class="f-val text-info">{{ recommendedEngineer.specialization }}</span>
+              </div>
+            </div>
+            <p class="recommendation-desc mt-2 text-xs text-muted">
+              * Score derived from: (workload × 2) + distance_km. Lowest score is dispatched.
+            </p>
+          </div>
+        </div>
+
+        <form (ngSubmit)="assignTicket()">
+          <div class="form-group">
+            <label class="form-label" for="selectTechnician">Select Technician</label>
+            <select id="selectTechnician" name="selectTechnician" class="form-control" [(ngModel)]="selectedEngineerId" required>
+              <option [value]="null" disabled selected>-- Choose technician to assign --</option>
+              <option *ngFor="let eng of engineers" [value]="eng.engineerId" [disabled]="!eng.isAvailable">
+                {{ eng.name }} (Base: {{ eng.homeLocation }} | Special: {{ eng.specialization }} | Active: {{ eng.workload }} tasks)
+              </option>
+            </select>
+          </div>
+
+          <div class="flex-between gap-1 mt-4">
+            <button type="button" class="btn btn-secondary w-50" (click)="closeAssignModal()">Cancel</button>
+            <button type="submit" class="btn btn-accent w-50" [disabled]="!selectedEngineerId || isLoading">
+              <span *ngIf="!isLoading">Confirm Dispatch</span>
+              <span *ngIf="isLoading" class="spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
