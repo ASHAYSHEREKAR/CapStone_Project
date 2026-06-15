@@ -1,0 +1,20 @@
+# Maven build outputs
+**/target/
+*.class
+
+# IDE and Project settings
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/bin/
+.vscode/lib/
+
+# Node/Angular dependencies and builds
+**/node_modules/
+**/dist/
+.angular/
+
+# Log files
+*.log
