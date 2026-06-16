@@ -5,6 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import CryptoJS from 'crypto-js';
 
+// ----------------------------------------------------
+// VIVA EXPLANATION: What does ForgotPasswordComponent do?
+// - Purpose: Allows a user to reset their password without contacting an administrator.
+// - Question Recovery: Retrieves the user's security question.
+// - Validation: Checks if the user's security question answer matches the database record.
+// - Hashing: Encrypts the new password using SHA-256 before updating.
+// ----------------------------------------------------
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
@@ -19,7 +26,7 @@ export class ForgotPasswordComponent {
   newPassword = '';
   confirmPassword = '';
   
-  step = 1; // 1: Email collection, 2: Question & Password reset
+  step = 1; // VIVA EXPLANATION: Step 1 is retrieving the question, Step 2 is verifying the answer and entering a new password.
   errorMessage: string | null = null;
   successMessage: string | null = null;
   isLoading = false;
@@ -29,6 +36,7 @@ export class ForgotPasswordComponent {
     private router: Router
   ) {}
 
+  // VIVA EXPLANATION: Step 1 Submit. Hits http://localhost:8081/api/auth/security-question?email=...
   onRetrieveQuestion(): void {
     if (!this.email) {
       this.errorMessage = 'Please enter your email.';
@@ -41,13 +49,9 @@ export class ForgotPasswordComponent {
     this.authService.getSecurityQuestion(this.email).subscribe({
       next: (res) => {
         this.isLoading = false;
-        // The backend returns a plain string (question) or "User not found!"
-        const resText = typeof res === 'string' ? res : (res && res.text ? res.text : '');
         
-        // Wait, angular HttpClient might try to parse as JSON. Let's see if the backend returns string as text.
-        // In auth.service.ts, getSecurityQuestion doesn't specify responseType: 'text'. If it's returning text, it might fail to parse as JSON.
-        // Let's make sure we handle that, or we should check how getSecurityQuestion is written.
-        // Let's write the handler robustly.
+        // VIVA EXPLANATION: Spring Boot might return string text or a JSON object depending on configuration.
+        // We handle both parsing styles robustly so that no crash occurs.
         if (res && res.message) {
           if (res.message.includes('not found') || res.message.includes('User not found')) {
             this.errorMessage = 'User not found with this email.';
@@ -66,12 +70,13 @@ export class ForgotPasswordComponent {
           this.securityQuestion = res.question;
           this.step = 2;
         } else {
-          this.errorMessage = 'Could not retrieve security question. Make sure email is correct.';
+          this.errorMessage = 'Could not retrieve security question. Verify email.';
         }
       },
       error: (err) => {
         this.isLoading = false;
-        // Let's check if the error is actually parsing error (HttpErrorResponse) but has status 200 and text content
+        // VIVA EXPLANATION: If Angular HttpClient throws parsing error because response is raw string,
+        // we extract the error message from the response text if HTTP status is 200 (Success).
         if (err.status === 200 && err.error && err.error.text) {
           const resText = err.error.text;
           if (resText.includes('not found') || resText.includes('User not found')) {
@@ -81,13 +86,14 @@ export class ForgotPasswordComponent {
             this.step = 2;
           }
         } else {
-          this.errorMessage = 'Error communicating with Auth service. User might not exist.';
+          this.errorMessage = 'Error retrieving question. User may not exist.';
           console.error('Retrieve question error:', err);
         }
       }
     });
   }
 
+  // VIVA EXPLANATION: Step 2 Submit. Hits http://localhost:8081/api/auth/forgot-password.
   onSubmitReset(): void {
     if (!this.securityAnswer || !this.newPassword || !this.confirmPassword) {
       this.errorMessage = 'Please fill in all fields.';
@@ -102,7 +108,7 @@ export class ForgotPasswordComponent {
     this.isLoading = true;
     this.errorMessage = null;
 
-    // Encrypt password using SHA-256 (NFR1)
+    // VIVA EXPLANATION: Encrypt password with SHA-256 client-side before sending.
     const encryptedPassword = CryptoJS.SHA256(this.newPassword).toString();
 
     this.authService.forgotPassword({
@@ -112,7 +118,6 @@ export class ForgotPasswordComponent {
     }).subscribe({
       next: (res) => {
         this.isLoading = false;
-        // In the backend, forgotPassword returns a String. It may fail parsing if responseType isn't set, so let's handle both.
         const msg = res && res.message ? res.message : (typeof res === 'string' ? res : '');
         
         if (msg.includes('successful') || msg.includes('updated')) {
@@ -121,12 +126,12 @@ export class ForgotPasswordComponent {
             this.router.navigate(['/login']);
           }, 2000);
         } else {
-          this.errorMessage = msg || 'Failed to update password. Verify security answer.';
+          this.errorMessage = msg || 'Failed to update password. Verify answer.';
         }
       },
       error: (err) => {
         this.isLoading = false;
-        // If status 200 and parse error
+        // VIVA EXPLANATION: Handled Angular string parser error when HTTP status is 200 (Success).
         if (err.status === 200 && err.error && err.error.text) {
           const resText = err.error.text;
           if (resText.includes('successful') || resText.includes('updated')) {
@@ -146,6 +151,7 @@ export class ForgotPasswordComponent {
     });
   }
 
+  // VIVA EXPLANATION: Returns back to Step 1 email form and resets input states.
   onBackToStep1(): void {
     this.step = 1;
     this.securityQuestion = null;

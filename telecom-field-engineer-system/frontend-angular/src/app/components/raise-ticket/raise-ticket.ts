@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { TicketService } from '../../services/ticket.service';
 import { AuthService } from '../../services/auth.service';
 
+// VIVA EXPLANATION: Coordinate mapping dictionary matching specific areas in Bangalore.
+// Used to assign latitude/longitude coordinates to a raised ticket, which the backend matching service parses.
 const BANGALORE_COORDINATES: { [key: string]: { lat: number; lng: number } } = {
   'Koramangala': { lat: 12.9352, lng: 77.6245 },
   'Whitefield': { lat: 12.9698, lng: 77.7500 },
@@ -19,6 +21,11 @@ const BANGALORE_COORDINATES: { [key: string]: { lat: number; lng: number } } = {
   'Yelahanka': { lat: 13.1007, lng: 77.5963 }
 };
 
+// ----------------------------------------------------
+// VIVA EXPLANATION: What does RaiseTicketComponent do?
+// - Purpose: Allows a customer to submit a new service ticket (FAULT or INSTALLATION).
+// - Location mapping: When the user selects a Bangalore area, the coordinates (lat/lng) are automatically looked up from our map dictionary and stored in the ticket.
+// ----------------------------------------------------
 @Component({
   selector: 'app-raise-ticket',
   standalone: true,
@@ -44,6 +51,7 @@ export class RaiseTicketComponent {
     private router: Router
   ) {}
 
+  // VIVA EXPLANATION: Executed on ticket submission. Hits POST http://localhost:8082/api/tickets.
   onSubmit(): void {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
@@ -60,8 +68,10 @@ export class RaiseTicketComponent {
     this.errorMessage = null;
     this.successMessage = null;
 
+    // VIVA EXPLANATION: Maps the selected area name to coordinates.
     const coords = BANGALORE_COORDINATES[this.ticket.location] || { lat: 12.9716, lng: 77.5946 };
 
+    // VIVA EXPLANATION: Build the payload schema matching what the Ticket Microservice expects.
     const ticketData = {
       userId: currentUser.userId,
       userName: currentUser.name,
@@ -72,10 +82,11 @@ export class RaiseTicketComponent {
       longitude: coords.lng
     };
 
+    // VIVA EXPLANATION: Sends the ticket creation request.
     this.ticketService.createTicket(ticketData).subscribe({
       next: (res) => {
         this.isLoading = false;
-        this.successMessage = 'Ticket raised successfully! Redirecting to dashboard...';
+        this.successMessage = 'Ticket raised successfully! Redirecting...';
         setTimeout(() => {
           this.router.navigate(['/dashboard']);
         }, 2000);

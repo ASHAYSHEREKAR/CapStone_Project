@@ -8,6 +8,11 @@ import { AuthService } from '../../services/auth.service';
 import { Ticket } from '../../models/ticket.model';
 import { Engineer } from '../../models/engineer.model';
 
+// ----------------------------------------------------
+// VIVA EXPLANATION: What does AdminDashboardComponent do?
+// - Purpose: Central control board for administrators to monitor tickets, view engineers, and assign work.
+// - Best Match (FR13): Automatically finds the optimal technician using an allocation algorithm.
+// ----------------------------------------------------
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -19,9 +24,9 @@ export class AdminDashboardComponent implements OnInit {
   tickets: Ticket[] = [];
   filteredTickets: Ticket[] = [];
   engineers: Engineer[] = [];
-  alertTickets: Ticket[] = []; // FAILED or DEFERRED
+  alertTickets: Ticket[] = []; // Tickets with status FAILED or DEFERRED
   
-  // Dashboard stats
+  // Dashboard statistics
   stats = {
     total: 0,
     open: 0,
@@ -30,13 +35,13 @@ export class AdminDashboardComponent implements OnInit {
     alerts: 0
   };
 
-  currentTab = 'TICKETS'; // 'TICKETS', 'ENGINEERS', 'ALERTS'
+  currentTab = 'TICKETS'; // Tab switcher: 'TICKETS', 'ENGINEERS', or 'ALERTS'
   statusFilter = 'ALL';
   isLoading = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  // Assignment Modal State
+  // Assignment Modal State variables
   selectedTicket: Ticket | null = null;
   recommendedEngineer: Engineer | null = null;
   selectedEngineerId: number | null = null;
@@ -49,6 +54,7 @@ export class AdminDashboardComponent implements OnInit {
     private router: Router
   ) {}
 
+  // VIVA EXPLANATION: Verification guard to make sure only ADMIN role can load this page.
   ngOnInit(): void {
     if (this.authService.getRole() !== 'ADMIN') {
       this.router.navigate(['/login']);
@@ -57,18 +63,19 @@ export class AdminDashboardComponent implements OnInit {
     this.loadData();
   }
 
+  // VIVA EXPLANATION: Hits GET endpoints to load both tickets and technicians, then sorts tickets by date.
   loadData(): void {
     this.isLoading = true;
     this.errorMessage = null;
 
-    // Load tickets
+    // Load tickets from Ticket microservice (port 8082)
     this.ticketService.getAllTickets().subscribe({
       next: (ticketList) => {
         this.tickets = ticketList.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
         this.calculateStats();
         this.applyFilter();
         
-        // Load engineers
+        // Load engineers from Engineer microservice (port 8083)
         this.engineerService.getAllEngineers().subscribe({
           next: (engList) => {
             this.engineers = engList;
@@ -88,6 +95,7 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  // VIVA EXPLANATION: Pre-aggregates metrics for display cards.
   calculateStats(): void {
     this.stats.total = this.tickets.length;
     this.stats.open = this.tickets.filter(t => t.status === 'OPEN').length;
@@ -95,10 +103,11 @@ export class AdminDashboardComponent implements OnInit {
     this.stats.success = this.tickets.filter(t => t.status === 'SUCCESS').length;
     this.stats.alerts = this.tickets.filter(t => t.status === 'FAILURE' || t.status === 'DEFERRED').length;
 
-    // Alerts tickets list
+    // Filter tickets that failed or are deferred for the Alert module (FR14)
     this.alertTickets = this.tickets.filter(t => t.status === 'FAILURE' || t.status === 'DEFERRED');
   }
 
+  // VIVA EXPLANATION: Filters tickets list by selected status in dropdown.
   applyFilter(): void {
     if (this.statusFilter === 'ALL') {
       this.filteredTickets = this.tickets;
@@ -111,6 +120,7 @@ export class AdminDashboardComponent implements OnInit {
     this.currentTab = tab;
   }
 
+  // VIVA EXPLANATION: Opens assign popup dialog.
   openAssignModal(ticket: Ticket): void {
     this.selectedTicket = ticket;
     this.recommendedEngineer = null;
@@ -123,6 +133,12 @@ export class AdminDashboardComponent implements OnInit {
     this.selectedEngineerId = null;
   }
 
+  // ----------------------------------------------------
+  // VIVA EXPLANATION: Best Match Allocation Algorithm (FR13)
+  // - Method: Calls the engineer service backend best-match API endpoint.
+  // - Logic: The backend finds available technicians, checks their vacation dates, calculates current workload,
+  //   and compares GPS coordinates using the Haversine formula to return the closest engineer.
+  // ----------------------------------------------------
   findBestMatch(): void {
     if (!this.selectedTicket) return;
     
@@ -149,13 +165,15 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  // VIVA EXPLANATION: Completes assignment by updating ticket status to ASSIGNED and linking the engineer ID.
   assignTicket(): void {
     if (!this.selectedTicket || !this.selectedEngineerId) return;
 
     this.isLoading = true;
-    const selectedEng = this.engineers.find(e => e.engineerId === this.selectedEngineerId);
+    const selectedEng = this.engineers.find(e => Number(e.engineerId) === Number(this.selectedEngineerId));
     if (!selectedEng) {
       this.isLoading = false;
+      this.errorMessage = 'Selected technician not found in the list.';
       return;
     }
 
@@ -166,6 +184,7 @@ export class AdminDashboardComponent implements OnInit {
 
     const isReassign = this.selectedTicket.status === 'DEFERRED';
 
+    // VIVA EXPLANATION: Calls PUT /api/tickets/{id}/assign (or /reassign if it was deferred/failed)
     const assignObservable = isReassign
       ? this.ticketService.reassignTicket(this.selectedTicket.ticketId!, request)
       : this.ticketService.assignEngineer(this.selectedTicket.ticketId!, request);
@@ -204,7 +223,7 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
-  // Calculate distance between two lat/lng coordinates (FR13 distance visual helper)
+  // VIVA EXPLANATION: Haversine distance calculator on the client side for visual display only.
   getDistance(lat1: number, lon1: number, lat2: number, lon2: number): string {
     const R = 6371; // Radius of earth in km
     const dLat = (lat2 - lat1) * Math.PI / 180;

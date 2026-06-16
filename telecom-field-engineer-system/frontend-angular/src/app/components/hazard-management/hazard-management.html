@@ -1,50 +1,40 @@
-<div class="hazard-wrapper container">
+<div class="container">
   <!-- Success Notification -->
-  <div class="success-banner" *ngIf="successMessage">
-    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
-      <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
-    </svg>
+  <div class="success-alert" *ngIf="successMessage">
     <span>{{ successMessage }}</span>
   </div>
 
-  <div class="hazard-header mb-4">
+  <div class="flex-between mb-4">
     <div>
-      <h1 class="gradient-text">Hazard & Risk Compliance Center</h1>
-      <p class="desc text-secondary mt-1">Identify, report, and audit field infrastructure hazards (FR20, FR21)</p>
+      <h1>Hazard & Compliance Control</h1>
+      <p class="text-secondary">Identify, report, and monitor infrastructure safety risks</p>
     </div>
-    <button class="btn btn-accent" (click)="openAddModal()">
-      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor" class="me-1">
-        <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-      </svg>
-      Report Site Hazard
+    <button class="btn btn-primary" (click)="openAddModal()">
+      + Report Site Hazard
     </button>
   </div>
 
   <!-- Error alert -->
-  <div class="error-alert mb-3" *ngIf="errorMessage">
-    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
-      <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
-    </svg>
+  <div class="error-alert" *ngIf="errorMessage">
     <span>{{ errorMessage }}</span>
   </div>
 
   <!-- Interactive Leaflet Map for Hazards -->
-  <div class="card p-3 mb-4">
-    <h2 class="text-sm font-weight-bold mb-2">Interactive Hazard Heatmap</h2>
-    <div style="height: 400px; position: relative;">
+  <div class="card" style="padding: 0.5rem; margin-bottom: 1.5rem;">
+    <h3 style="padding: 0.5rem 1rem 0 1rem; font-size: 1.1rem;">Interactive Hazard Heatmap</h3>
+    <div style="height: 380px; position: relative;">
       <app-map [markers]="mapMarkers" [zoom]="12"></app-map>
     </div>
   </div>
 
   <!-- Tabular Log -->
-  <div class="card p-0">
-    <div class="loading-state flex-center py-5" *ngIf="isLoading">
-      <span class="spinner"></span>
-      <span class="ms-2 text-secondary">Loading safety logs...</span>
+  <div class="card" style="padding: 0;">
+    <div class="text-center" style="padding: 2rem;" *ngIf="isLoading">
+      <p class="text-secondary">Loading safety logs...</p>
     </div>
 
-    <div class="empty-state text-center py-5" *ngIf="!isLoading && hazards.length === 0">
-      <p class="text-secondary font-weight-bold">No safety hazards reported on active network.</p>
+    <div class="text-center" style="padding: 2rem;" *ngIf="!isLoading && hazards.length === 0">
+      <p class="text-secondary">No safety hazards reported on active network.</p>
     </div>
 
     <div class="table-responsive" *ngIf="!isLoading && hazards.length > 0">
@@ -52,7 +42,7 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Location</th>
+            <th>Area / Base</th>
             <th>Type</th>
             <th>Description</th>
             <th>Severity</th>
@@ -66,23 +56,19 @@
             <td>#{{ h.hazardId }}</td>
             <td>
               <strong>{{ h.location }}</strong>
-              <div class="text-xs text-muted">Lat: {{ h.latitude }} | Lng: {{ h.longitude }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Lat: {{ h.latitude }} | Lng: {{ h.longitude }}</div>
             </td>
-            <td>
-              <span class="type-tag installation">
-                {{ h.hazardType }}
-              </span>
-            </td>
-            <td class="desc-cell">{{ h.description }}</td>
+            <td><strong>{{ h.hazardType }}</strong></td>
+            <td>{{ h.description }}</td>
             <td>
               <span class="badge" [ngClass]="getSeverityClass(h.severity)">{{ h.severity }}</span>
             </td>
             <td>{{ h.reporterName || 'System' }}</td>
             <td>{{ h.createdAt | date:'short' }}</td>
             <td>
-              <div class="flex-center gap-1">
-                <button class="btn btn-accent btn-sm" (click)="openEditModal(h)">Edit</button>
-                <button class="btn btn-danger btn-sm" (click)="deleteHazard(h.hazardId!)">Delete</button>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;" (click)="openEditModal(h)">Edit</button>
+                <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;" *ngIf="userRole === 'ADMIN'" (click)="deleteHazard(h.hazardId!)">Delete</button>
               </div>
             </td>
           </tr>
@@ -91,80 +77,46 @@
     </div>
   </div>
 
-  <!-- HAZARD REPORTING MODAL -->
-  <div class="modal-backdrop flex-center" *ngIf="showForm">
-    <div class="card modal-card">
-      <div class="modal-header">
-        <h2 class="gradient-text">{{ isEditMode ? 'Update' : 'Report New' }} Safety Hazard</h2>
-        <button class="btn-close" (click)="closeModal()">×</button>
+  <!-- HAZARD REPORTING MODAL DIALOG -->
+  <div *ngIf="showForm" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="card" style="max-width: 500px; width: 90%; background: white;">
+      <div class="flex-between mb-3" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <h3>{{ isEditMode ? 'Update' : 'Report' }} Safety Hazard</h3>
+        <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem;" (click)="closeModal()">X</button>
       </div>
 
-      <div class="modal-body">
+      <div>
         <form (ngSubmit)="onSubmit()">
-          <div class="form-group mb-3">
+          <div class="form-group">
             <label class="form-label" for="location">Location / Area Name</label>
-            <input 
-              id="location"
-              type="text" 
-              name="location" 
-              class="form-control" 
-              placeholder="e.g. Koramangala 5th Block" 
-              [(ngModel)]="currentHazard.location" 
-              required
-            >
+            <select id="location" name="location" class="form-control" [(ngModel)]="currentHazard.location" required>
+              <option *ngFor="let area of bangaloreAreas" [value]="area">{{ area }}</option>
+            </select>
           </div>
 
-          <div class="row mb-3">
-            <div class="col-6">
-              <label class="form-label" for="latitude">Latitude</label>
-              <input 
-                id="latitude"
-                type="number" 
-                step="0.0001" 
-                name="latitude" 
-                class="form-control" 
-                [(ngModel)]="currentHazard.latitude" 
-                required
-              >
-            </div>
-            <div class="col-6">
-              <label class="form-label" for="longitude">Longitude</label>
-              <input 
-                id="longitude"
-                type="number" 
-                step="0.0001" 
-                name="longitude" 
-                class="form-control" 
-                [(ngModel)]="currentHazard.longitude" 
-                required
-              >
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="hazardType">Hazard Type</label>
+            <select id="hazardType" name="hazardType" class="form-control" [(ngModel)]="currentHazard.hazardType">
+              <option value="Electrical">Electrical (High Voltage)</option>
+              <option value="Structural">Structural (Unstable, Manhole)</option>
+              <option value="Environmental">Environmental (Water, Gas)</option>
+              <option value="Chemical">Chemical Spill / Hazardous</option>
+              <option value="Traffic">Traffic Conduction Risk</option>
+              <option value="Other">Other Risks</option>
+            </select>
           </div>
 
-          <div class="row mb-3">
-            <div class="col-6">
-              <label class="form-label" for="hazardType">Hazard Type</label>
-              <select id="hazardType" name="hazardType" class="form-control" [(ngModel)]="currentHazard.hazardType">
-                <option value="Electrical">Electrical (High Voltage)</option>
-                <option value="Structural">Structural (Unstable, Manhole)</option>
-                <option value="Environmental">Environmental (Water, Gas)</option>
-                <option value="Chemical">Chemical Spill / Hazardous</option>
-                <option value="Traffic">Traffic Conduction Risk</option>
-                <option value="Other">Other Risks</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <label class="form-label" for="severity">Severity Rating</label>
-              <select id="severity" name="severity" class="form-control" [(ngModel)]="currentHazard.severity">
-                <option value="LOW">LOW</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH</option>
-                <option value="CRITICAL">CRITICAL</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="severity">Severity Rating</label>
+            <select id="severity" name="severity" class="form-control" [(ngModel)]="currentHazard.severity">
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
           </div>
 
-          <div class="form-group mb-3">
+          <div class="form-group">
             <label class="form-label" for="description">Detailed Description & Safety Warnings</label>
             <textarea 
               id="description"
@@ -177,7 +129,7 @@
             ></textarea>
           </div>
 
-          <div class="form-group mb-3">
+          <div class="form-group">
             <label class="form-label" for="reporterName">Reporter Info</label>
             <input 
               id="reporterName"
@@ -189,11 +141,10 @@
             >
           </div>
 
-          <div class="flex-between gap-1 mt-4">
-            <button type="button" class="btn btn-secondary w-50" (click)="closeModal()">Cancel</button>
-            <button type="submit" class="btn btn-accent w-50" [disabled]="isLoading">
-              <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Publish Report' }}</span>
-              <span *ngIf="isLoading" class="spinner"></span>
+          <div class="flex-between mt-4">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+              {{ isEditMode ? 'Save Changes' : 'Publish Report' }}
             </button>
           </div>
         </form>

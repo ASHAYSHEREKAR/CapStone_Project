@@ -8,6 +8,11 @@ import { AuthService } from '../../services/auth.service';
 import { Ticket } from '../../models/ticket.model';
 import { Engineer } from '../../models/engineer.model';
 
+// ----------------------------------------------------
+// VIVA EXPLANATION: What does EngineerDashboardComponent do?
+// - Purpose: Field Engineer's task hub.
+// - Operations: Toggle on/off availability, schedule leaves, accept/reject tickets, update task progress, and log feedback notes.
+// ----------------------------------------------------
 @Component({
   selector: 'app-engineer-dashboard',
   standalone: true,
@@ -19,10 +24,11 @@ export class EngineerDashboardComponent implements OnInit {
   engineer: Engineer | null = null;
   tickets: Ticket[] = [];
   
-  assignedTickets: Ticket[] = []; // Status ASSIGNED
-  activeTickets: Ticket[] = [];   // Status ACCEPTED, IN_PROGRESS
-  pastTickets: Ticket[] = [];     // Status SUCCESS, FAILURE
+  assignedTickets: Ticket[] = []; // Tickets waiting for accept/reject (status ASSIGNED)
+  activeTickets: Ticket[] = [];   // Tickets currently in progress (status ACCEPTED, IN_PROGRESS)
+  pastTickets: Ticket[] = [];     // Resolved tickets (status SUCCESS, FAILURE, DEFERRED)
 
+  // Leave Planner state
   holiday = {
     holidayStart: '',
     holidayEnd: ''
@@ -46,6 +52,7 @@ export class EngineerDashboardComponent implements OnInit {
     private router: Router
   ) {}
 
+  // VIVA EXPLANATION: Route guard checking role before triggering profile load.
   ngOnInit(): void {
     if (this.authService.getRole() !== 'ENGINEER') {
       this.router.navigate(['/login']);
@@ -54,6 +61,7 @@ export class EngineerDashboardComponent implements OnInit {
     this.loadEngineerProfile();
   }
 
+  // VIVA EXPLANATION: Pulls engineer profile details from http://localhost:8083/api/engineers/email/{email}.
   loadEngineerProfile(): void {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return;
@@ -74,6 +82,7 @@ export class EngineerDashboardComponent implements OnInit {
     });
   }
 
+  // VIVA EXPLANATION: Retrieves tickets linked to this engineer's ID from port 8082.
   loadTasks(engineerId: number): void {
     this.ticketService.getTicketsByEngineerId(engineerId).subscribe({
       next: (data) => {
@@ -89,12 +98,14 @@ export class EngineerDashboardComponent implements OnInit {
     });
   }
 
+  // VIVA EXPLANATION: Groups tickets into categories for dashboard visualization lists.
   categorizeTickets(): void {
     this.assignedTickets = this.tickets.filter(t => t.status === 'ASSIGNED');
     this.activeTickets = this.tickets.filter(t => t.status === 'ACCEPTED' || t.status === 'IN_PROGRESS');
     this.pastTickets = this.tickets.filter(t => t.status === 'SUCCESS' || t.status === 'FAILURE' || t.status === 'DEFERRED');
   }
 
+  // VIVA EXPLANATION: Toggles availability status. If OFF DUTY, the auto-assignment matching excludes them.
   toggleAvailability(): void {
     if (!this.engineer) return;
 
@@ -105,7 +116,7 @@ export class EngineerDashboardComponent implements OnInit {
     this.engineerService.updateEngineer(this.engineer.engineerId!, updated).subscribe({
       next: (res) => {
         this.engineer!.isAvailable = res.isAvailable;
-        this.successMessage = `Availability updated to ${res.isAvailable ? 'AVAILABLE' : 'UNAVAILABLE'}`;
+        this.successMessage = `Availability updated to ${res.isAvailable ? 'AVAILABLE' : 'OFF DUTY'}`;
         setTimeout(() => this.successMessage = null, 3000);
       },
       error: (err) => {
@@ -115,6 +126,7 @@ export class EngineerDashboardComponent implements OnInit {
     });
   }
 
+  // VIVA EXPLANATION: Saves leave planner dates. The matching engine ignores engineers on active leave.
   saveHoliday(): void {
     if (!this.engineer) return;
 
@@ -143,6 +155,7 @@ export class EngineerDashboardComponent implements OnInit {
     this.saveHoliday();
   }
 
+  // VIVA EXPLANATION: Accepts task. Status moves from ASSIGNED -> ACCEPTED.
   acceptTicket(ticketId: number): void {
     this.isActionLoading = true;
     this.ticketService.updateStatus(ticketId, { status: 'ACCEPTED' }).subscribe({
@@ -160,6 +173,8 @@ export class EngineerDashboardComponent implements OnInit {
     });
   }
 
+  // VIVA EXPLANATION: Rejects task. Status moves from ASSIGNED -> REJECTED.
+  // The ticket is returned to the unassigned pool and the engineer's workload is decremented.
   rejectTicket(ticketId: number): void {
     this.isActionLoading = true;
     this.ticketService.updateStatus(ticketId, { status: 'REJECTED' }).subscribe({
@@ -177,6 +192,7 @@ export class EngineerDashboardComponent implements OnInit {
     });
   }
 
+  // VIVA EXPLANATION: Starts active work. Status moves to IN_PROGRESS.
   startWork(ticketId: number): void {
     this.isActionLoading = true;
     this.ticketService.updateStatus(ticketId, { status: 'IN_PROGRESS' }).subscribe({
@@ -201,6 +217,7 @@ export class EngineerDashboardComponent implements OnInit {
     this.selectedTicket = null;
   }
 
+  // VIVA EXPLANATION: Submits the final resolution (SUCCESS or FAILURE/DEFERRED) along with feedback notes.
   submitStatusUpdate(): void {
     if (!this.selectedTicket) return;
 

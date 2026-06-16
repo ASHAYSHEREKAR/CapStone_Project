@@ -6,7 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { EngineerService } from '../../services/engineer.service';
 import CryptoJS from 'crypto-js';
 
-// Coordinates dictionary for Bangalore areas
+// VIVA EXPLANATION: Coordinates dictionary for mapping Bangalore areas to latitudes and longitudes
 const BANGALORE_COORDINATES: { [key: string]: { lat: number; lng: number } } = {
   'Koramangala': { lat: 12.9352, lng: 77.6245 },
   'Whitefield': { lat: 12.9698, lng: 77.7500 },
@@ -21,6 +21,11 @@ const BANGALORE_COORDINATES: { [key: string]: { lat: number; lng: number } } = {
   'Yelahanka': { lat: 13.1007, lng: 77.5963 }
 };
 
+// ----------------------------------------------------
+// VIVA EXPLANATION: What does RegisterComponent do?
+// - Purpose: Handles registering new users (USER, ADMIN, or ENGINEER).
+// - Multi-Database Flow: If role is ENGINEER, we register them in both the Auth Microservice database (for login) AND the Engineer Microservice database (for scheduling/workload mapping).
+// ----------------------------------------------------
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -39,7 +44,6 @@ export class RegisterComponent {
     address: '',
     securityQuestion: 'What is your pet name?',
     securityAnswer: '',
-    // Engineer-specific fields
     specialization: 'General',
     homeLocation: 'Koramangala'
   };
@@ -55,6 +59,7 @@ export class RegisterComponent {
     private router: Router
   ) {}
 
+  // VIVA EXPLANATION: Executed when user clicks "Register Account".
   onSubmit(): void {
     this.errorMessage = null;
     this.successMessage = null;
@@ -66,10 +71,10 @@ export class RegisterComponent {
 
     this.isLoading = true;
 
-    // Encrypt password using SHA-256 (NFR1)
+    // VIVA EXPLANATION: Hashing the password on client-side using SHA-256 before transmission.
     const encryptedPassword = CryptoJS.SHA256(this.user.password).toString();
 
-    // 1. Register user in Auth service
+    // 1. Prepare data for Auth service registration (port 8081)
     const registerData = {
       name: this.user.name,
       email: this.user.email,
@@ -81,6 +86,7 @@ export class RegisterComponent {
       securityAnswer: this.user.securityAnswer
     };
 
+    // VIVA EXPLANATION: Save credentials in the user auth service database first.
     this.authService.register(registerData).subscribe({
       next: (res) => {
         if (res && res.includes('Email already registered')) {
@@ -89,7 +95,7 @@ export class RegisterComponent {
           return;
         }
 
-        // 2. If registering as an ENGINEER, also register in Engineer service
+        // VIVA EXPLANATION: 2. If registration role is ENGINEER, we also create a profile in the Engineer service (port 8083).
         if (this.user.role === 'ENGINEER') {
           const coords = BANGALORE_COORDINATES[this.user.homeLocation] || { lat: 12.9716, lng: 77.5946 };
           const engineerData = {
@@ -104,13 +110,14 @@ export class RegisterComponent {
             isAvailable: true
           };
 
+          // VIVA EXPLANATION: Calls Engineer Service to create the technician record for mapping and workload calculations.
           this.engineerService.createEngineer(engineerData).subscribe({
             next: () => {
               this.handleRegistrationSuccess();
             },
             error: (err) => {
               this.isLoading = false;
-              this.errorMessage = 'Auth succeeded, but failed to create engineer profile. Please contact admin.';
+              this.errorMessage = 'Auth succeeded, but failed to create engineer profile. Contact admin.';
               console.error('Engineer profile creation error:', err);
             }
           });
@@ -126,6 +133,7 @@ export class RegisterComponent {
     });
   }
 
+  // VIVA EXPLANATION: Success handler that shows a success alert and redirects the user to the login screen after a short delay.
   private handleRegistrationSuccess(): void {
     this.isLoading = false;
     this.successMessage = 'Registration successful! Redirecting to login...';

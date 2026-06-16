@@ -20,10 +20,23 @@ The database runs in the background as a Windows service. To verify it is runnin
    ```
    *(If the status shows **Stopped**, start it by running: `Start-Service -Name MySQL`)*
 
+## Step 3: Start All Services at Once (Recommended)
+You can run all the services at once using the automated batch script:
+1. Open PowerShell or Command Prompt.
+2. Navigate to the `telecom-field-engineer-system` directory:
+   ```powershell
+   cd .\telecom-field-engineer-system
+   ```
+3. Run the batch script:
+   ```powershell
+   .\start-all.bat
+   ```
+This will automatically open separate command prompt windows for each service, startup the Eureka Server first, wait 12 seconds, and then launch the backend services and Angular frontend.
+
 ---
 
-## Step 3: Start Services in Separate Terminals
-You will need to open **5 separate terminal tabs** in VS Code (click the `+` button in the terminal panel to add tabs).
+## Step 3 (Alternative): Start Services Manually in Separate Terminals
+If you prefer running services manually, you will need to open **5 separate terminal tabs** in VS Code (click the `+` button in the terminal panel to add tabs).
 
 ### 🖥️ Terminal 1: Eureka Discovery Server (Port 8761)
 1. In VS Code Terminal, navigate to the Eureka directory:

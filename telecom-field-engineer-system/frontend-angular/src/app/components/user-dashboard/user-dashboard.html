@@ -1,46 +1,33 @@
-<div class="dashboard-wrapper container">
-  <div class="dashboard-header mb-4">
+<div class="container">
+  <div class="flex-between mb-4">
     <div>
-      <h1 class="gradient-text">My Support Portal</h1>
-      <p class="desc text-secondary mt-1">Manage and track your telecom installation and fault tickets</p>
+      <h1>My Support Portal</h1>
+      <p class="text-secondary">Track your telecom installation and fault tickets</p>
     </div>
-    <a routerLink="/raise-ticket" class="btn btn-accent">
-      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
-        <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-      </svg>
-      Raise New Ticket
+    <a routerLink="/raise-ticket" class="btn btn-primary">
+      + Raise New Ticket
     </a>
   </div>
 
   <!-- Filters / Tabs -->
-  <div class="tabs-container mb-3">
-    <button class="tab-btn" [class.active]="filterStatus === 'ALL'" (click)="setFilter('ALL')">All Tickets</button>
-    <button class="tab-btn" [class.active]="filterStatus === 'CURRENT'" (click)="setFilter('CURRENT')">Current Tickets</button>
-    <button class="tab-btn" [class.active]="filterStatus === 'PREVIOUS'" (click)="setFilter('PREVIOUS')">Ticket History</button>
+  <div class="mb-3">
+    <button class="btn btn-secondary" style="margin-right: 0.5rem;" [style.background-color]="filterStatus === 'ALL' ? 'var(--primary)' : ''" [style.color]="filterStatus === 'ALL' ? 'white' : ''" (click)="setFilter('ALL')">All Tickets</button>
+    <button class="btn btn-secondary" style="margin-right: 0.5rem;" [style.background-color]="filterStatus === 'CURRENT' ? 'var(--primary)' : ''" [style.color]="filterStatus === 'CURRENT' ? 'white' : ''" (click)="setFilter('CURRENT')">Current Tickets</button>
+    <button class="btn btn-secondary" [style.background-color]="filterStatus === 'PREVIOUS' ? 'var(--primary)' : ''" [style.color]="filterStatus === 'PREVIOUS' ? 'white' : ''" (click)="setFilter('PREVIOUS')">Ticket History</button>
   </div>
 
   <div class="error-alert" *ngIf="errorMessage">
-    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
-      <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
-    </svg>
     <span>{{ errorMessage }}</span>
   </div>
 
   <!-- Main Card -->
-  <div class="card p-0">
-    <div class="loading-state flex-center py-5" *ngIf="isLoading">
-      <span class="spinner"></span>
-      <span class="ms-2 text-secondary">Retrieving your tickets...</span>
+  <div class="card" style="padding: 0;">
+    <div class="text-center" style="padding: 2rem;" *ngIf="isLoading">
+      <p class="text-secondary">Retrieving your tickets...</p>
     </div>
 
-    <div class="empty-state text-center py-5" *ngIf="!isLoading && filteredTickets.length === 0">
-      <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon text-muted mb-2" height="48" viewBox="0 960 960 960" width="48" fill="currentColor">
-        <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-570v-150H240v640h480v-490H520ZM240-800v150-150 640-640Z"/>
-      </svg>
-      <p class="text-secondary font-weight-bold">No tickets found</p>
-      <p class="text-muted mt-1" *ngIf="filterStatus === 'ALL'">You have not raised any service requests yet.</p>
-      <p class="text-muted mt-1" *ngIf="filterStatus === 'CURRENT'">You do not have any active service requests.</p>
-      <p class="text-muted mt-1" *ngIf="filterStatus === 'PREVIOUS'">No resolved tickets in your history.</p>
+    <div class="text-center" style="padding: 2rem;" *ngIf="!isLoading && filteredTickets.length === 0">
+      <p class="text-secondary">No tickets found.</p>
     </div>
 
     <div class="table-responsive" *ngIf="!isLoading && filteredTickets.length > 0">
@@ -60,13 +47,9 @@
         <tbody>
           <tr *ngFor="let ticket of filteredTickets">
             <td>#{{ ticket.ticketId }}</td>
-            <td>
-              <span class="type-tag" [class.installation]="ticket.ticketType === 'INSTALLATION'">
-                {{ ticket.ticketType }}
-              </span>
-            </td>
+            <td><strong>{{ ticket.ticketType }}</strong></td>
             <td>{{ ticket.location }}</td>
-            <td class="desc-cell">{{ ticket.description }}</td>
+            <td>{{ ticket.description }}</td>
             <td>
               <span class="badge" [ngClass]="getPriorityClass(ticket.priority)">
                 {{ ticket.priority }}
@@ -79,7 +62,7 @@
             </td>
             <td>{{ ticket.engineerName || 'Unassigned' }}</td>
             <td>
-              <button class="btn btn-secondary btn-sm" (click)="viewDetails(ticket)">
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;" (click)="viewDetails(ticket)">
                 View
               </button>
             </td>
@@ -89,64 +72,42 @@
     </div>
   </div>
 
-  <!-- Detail Modal -->
-  <div class="modal-backdrop flex-center" *ngIf="selectedTicket">
-    <div class="card modal-card">
-      <div class="modal-header">
-        <h2 class="gradient-text">Ticket #{{ selectedTicket.ticketId }}</h2>
-        <button class="btn-close" (click)="closeModal()">×</button>
+  <!-- Detail Modal Dialog -->
+  <div *ngIf="selectedTicket" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="card" style="max-width: 500px; width: 90%; background: white; max-height: 90vh; overflow-y: auto;">
+      <div class="flex-between mb-3" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <h3>Ticket #{{ selectedTicket.ticketId }} Details</h3>
+        <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem;" (click)="closeModal()">X</button>
       </div>
-      <div class="modal-body">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">Service Type</span>
-            <span class="detail-val type-tag" [class.installation]="selectedTicket.ticketType === 'INSTALLATION'">
-              {{ selectedTicket.ticketType }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Current Status</span>
-            <span class="detail-val badge" [ngClass]="getStatusClass(selectedTicket.status)">
-              {{ selectedTicket.status }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Priority Level</span>
-            <span class="detail-val badge" [ngClass]="getPriorityClass(selectedTicket.priority)">
-              {{ selectedTicket.priority }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Reported On</span>
-            <span class="detail-val">{{ selectedTicket.createdAt | date:'medium' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Target Location</span>
-            <span class="detail-val">{{ selectedTicket.location }}</span>
-          </div>
-          <div class="detail-item" *ngIf="selectedTicket.latitude">
-            <span class="detail-label">GPS Coordinates</span>
-            <span class="detail-val">{{ selectedTicket.latitude }}, {{ selectedTicket.longitude }}</span>
-          </div>
+      <div>
+        <p style="margin-bottom: 0.5rem;"><strong>Service Type:</strong> {{ selectedTicket.ticketType }}</p>
+        <p style="margin-bottom: 0.5rem;"><strong>Priority Level:</strong> 
+          <span class="badge" [ngClass]="getPriorityClass(selectedTicket.priority)">{{ selectedTicket.priority }}</span>
+        </p>
+        <p style="margin-bottom: 0.5rem;"><strong>Status:</strong> 
+          <span class="badge" [ngClass]="getStatusClass(selectedTicket.status)">{{ selectedTicket.status }}</span>
+        </p>
+        <p style="margin-bottom: 0.5rem;"><strong>Target Area:</strong> {{ selectedTicket.location }}</p>
+        <p style="margin-bottom: 0.5rem;" *ngIf="selectedTicket.latitude"><strong>Coordinates:</strong> {{ selectedTicket.latitude }}, {{ selectedTicket.longitude }}</p>
+        <p style="margin-bottom: 0.5rem;"><strong>Created On:</strong> {{ selectedTicket.createdAt | date:'medium' }}</p>
+        
+        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-top: 0.75rem;">
+          <strong>Description:</strong>
+          <p style="margin-top: 0.25rem; white-space: pre-wrap;">{{ selectedTicket.description }}</p>
         </div>
 
-        <div class="detail-block mt-3">
-          <span class="detail-label">Fault / Request Description</span>
-          <p class="detail-text">{{ selectedTicket.description }}</p>
+        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-top: 0.75rem;" *ngIf="selectedTicket.engineerName">
+          <strong>Field Technician:</strong>
+          <p style="margin-top: 0.25rem;">{{ selectedTicket.engineerName }}</p>
         </div>
 
-        <div class="detail-block mt-3" *ngIf="selectedTicket.engineerName">
-          <span class="detail-label">Assigned Field Technician</span>
-          <p class="detail-text text-info font-weight-bold">{{ selectedTicket.engineerName }}</p>
-        </div>
-
-        <div class="detail-block mt-3" *ngIf="selectedTicket.adminNotes">
-          <span class="detail-label">Technician/Admin Feedback Notes</span>
-          <p class="detail-text notes-box">{{ selectedTicket.adminNotes }}</p>
+        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-top: 0.75rem;" *ngIf="selectedTicket.adminNotes">
+          <strong>Technician / Admin Notes:</strong>
+          <p style="margin-top: 0.25rem;">{{ selectedTicket.adminNotes }}</p>
         </div>
       </div>
-      <div class="modal-footer mt-4">
-        <button class="btn btn-secondary w-100" (click)="closeModal()">Close Details</button>
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button class="btn btn-primary" (click)="closeModal()">Close</button>
       </div>
     </div>
   </div>

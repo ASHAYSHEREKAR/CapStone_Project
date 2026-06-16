@@ -10,6 +10,13 @@ export interface MapMarker {
   title?: string;
 }
 
+// ----------------------------------------------------
+// VIVA EXPLANATION: What is MapComponent?
+// - Purpose: Encapsulates Leaflet Map operations.
+// - Reusability: Used as a standalone component in dashboards and safety center views.
+// - Markers: Plotted dynamically from coordinates (lat/lng) sent by backend APIs.
+// - Route drawing: Supports drawing straight dash lines between two coordinates (e.g. technician and customer).
+// ----------------------------------------------------
 @Component({
   selector: 'app-map',
   standalone: true,
@@ -18,10 +25,10 @@ export interface MapMarker {
   styleUrls: ['./map.css']
 })
 export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
-  @Input() center: [number, number] = [12.9716, 77.5946]; // Bangalore default
+  @Input() center: [number, number] = [12.9716, 77.5946]; // Bangalore coordinates center by default
   @Input() zoom = 12;
   @Input() markers: MapMarker[] = [];
-  @Input() routePoints: [number, number][] = []; // Draw line if provided
+  @Input() routePoints: [number, number][] = []; // Latitude/longitude coordinate points to draw lines
 
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef;
 
@@ -31,10 +38,12 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
 
   ngOnInit(): void {}
 
+  // VIVA EXPLANATION: Initializes Leaflet map immediately after the HTML view mounts.
   ngAfterViewInit(): void {
     this.initMap();
   }
 
+  // VIVA EXPLANATION: Detects when inputs (like markers list) change dynamically and updates map views automatically.
   ngOnChanges(changes: SimpleChanges): void {
     if (this.map) {
       if (changes['center'] && !changes['center'].isFirstChange()) {
@@ -49,6 +58,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
     }
   }
 
+  // VIVA EXPLANATION: Destroys Leaflet map instance when navigating away to prevent memory leaks.
   ngOnDestroy(): void {
     if (this.map) {
       this.map.remove();
@@ -56,6 +66,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
     }
   }
 
+  // VIVA EXPLANATION: Initializes map parameters, default zoom, coordinates center, and loads tile layers.
   private initMap(): void {
     if (this.map) return;
 
@@ -65,10 +76,10 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
       zoomControl: true
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
+    // VIVA EXPLANATION: Uses OpenStreetMap standard tile layers.
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
     }).addTo(this.map);
 
     this.markerGroup = L.layerGroup().addTo(this.map);
@@ -83,6 +94,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
     }, 200);
   }
 
+  // VIVA EXPLANATION: Adds pins/markers to the map container for each active item in markers array.
   private updateMarkers(): void {
     if (!this.map || !this.markerGroup) return;
 
@@ -98,6 +110,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
       const pos: L.LatLngExpression = [m.latitude, m.longitude];
       bounds.push(pos);
 
+      // Create a colored SVG pin depending on type
       const customIcon = this.createSvgIcon(m.type);
       const marker = L.marker(pos, { icon: customIcon });
       
@@ -108,12 +121,13 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
       this.markerGroup?.addLayer(marker);
     });
 
-    // Fit bounds if multiple markers are present
+    // Auto-adjust zoom level to fit all pins inside the viewport.
     if (bounds.length > 1 && this.map) {
       this.map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
     }
   }
 
+  // VIVA EXPLANATION: Draws route lines between points (e.g. tracking field engineer traveling to ticket site).
   private updateRoute(): void {
     if (!this.map) return;
 
@@ -125,10 +139,10 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
     if (this.routePoints && this.routePoints.length >= 2) {
       const latLngs = this.routePoints.map(p => L.latLng(p[0], p[1]));
       this.routeLine = L.polyline(latLngs, {
-        color: '#00f2fe',
+        color: '#007bff',
         weight: 4,
         opacity: 0.8,
-        dashArray: '8, 8', // Animated dashes look
+        dashArray: '8, 8', // Dashed line style
         lineCap: 'round'
       }).addTo(this.map);
 
@@ -136,8 +150,9 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
     }
   }
 
+  // VIVA EXPLANATION: Generates dynamic emoji marker pins inside a custom div container.
   private createSvgIcon(type: string): L.DivIcon {
-    let color = '#00b0ff'; // Default blue
+    let color = '#007bff'; // Default Blue
     let symbol = '📍';
 
     switch (type) {
@@ -146,35 +161,35 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
         symbol = '👷';
         break;
       case 'ticket_open':
-        color = '#00b0ff'; // Light Blue
+        color = '#17a2b8'; // Teal
         symbol = '📥';
         break;
       case 'ticket_progress':
-        color = '#ffb300'; // Amber/Orange
+        color = '#ffc107'; // Yellow
         symbol = '⚡';
         break;
       case 'ticket_success':
-        color = '#00e676'; // Green
+        color = '#28a745'; // Green
         symbol = '✅';
         break;
       case 'ticket_failure':
-        color = '#ff1744'; // Red
+        color = '#dc3545'; // Red
         symbol = '❌';
         break;
       case 'hazard_low':
-        color = '#00e676';
+        color = '#28a745';
         symbol = '⚠️';
         break;
       case 'hazard_medium':
-        color = '#ffb300';
+        color = '#ffc107';
         symbol = '⚠️';
         break;
       case 'hazard_high':
-        color = '#ff9100';
+        color = '#fd7e14'; // Orange
         symbol = '⚠️';
         break;
       case 'hazard_critical':
-        color = '#ff1744';
+        color = '#dc3545';
         symbol = '☠️';
         break;
     }
@@ -182,7 +197,6 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit
     const htmlContent = `
       <div class="custom-map-pin" style="--pin-color: ${color}">
         <span class="pin-symbol">${symbol}</span>
-        <div class="pin-pulse" style="--pulse-color: ${color}"></div>
       </div>
     `;
 

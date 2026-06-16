@@ -1,65 +1,48 @@
-<div class="dashboard-wrapper container">
+<div class="container">
   <!-- Status Banner Messages -->
-  <div class="success-banner" *ngIf="successMessage">
-    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
-      <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
-    </svg>
+  <div class="success-alert" *ngIf="successMessage">
     <span>{{ successMessage }}</span>
   </div>
 
-  <div class="error-alert mb-3" *ngIf="errorMessage">
-    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 960 960 960" width="20" fill="currentColor">
-      <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
-    </svg>
+  <div class="error-alert" *ngIf="errorMessage">
     <span>{{ errorMessage }}</span>
   </div>
 
   <!-- FR17: New Assignment Dashboard Notification -->
-  <div class="new-assignment-notification alert-card card mb-4" *ngIf="assignedTickets.length > 0">
-    <div class="flex-center gap-1">
-      <span class="pulse-dot"></span>
-      <h3 class="text-danger">Dispatch Alert: You have {{ assignedTickets.length }} new task assignment(s) waiting!</h3>
-    </div>
-    <p class="text-secondary text-sm mt-1">Please review the details below and Accept or Reject based on workload and availability factors (FR18, FR19).</p>
+  <div class="card" *ngIf="assignedTickets.length > 0" style="border-color: var(--danger); background-color: #fdf2f2;">
+    <h3 class="text-danger">⚠️ Dispatch Alert: You have {{ assignedTickets.length }} new task assignment(s) waiting!</h3>
+    <p class="text-secondary" style="font-size: 0.9rem; margin-top: 0.25rem;">Please review the details below and Accept or Reject the task.</p>
   </div>
 
   <!-- Main Grid: Left Column (Profile & Leave planner), Right Column (Tasks) -->
-  <div class="main-grid">
-    <div class="side-panel">
+  <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 1rem; @media (min-width: 768px) { grid-template-columns: 280px 1fr; }">
+    <!-- Sidebar Panel -->
+    <div>
       <!-- Profile Status Card -->
-      <div class="card mb-3" *ngIf="engineer">
-        <h2 class="gradient-text mb-2">My Dispatch Profile</h2>
-        <div class="profile-info">
-          <p class="name font-weight-bold">{{ engineer.name }}</p>
-          <p class="specialization text-secondary text-sm">Special: {{ engineer.specialization || 'General' }}</p>
-          <p class="location text-secondary text-sm">Base Area: {{ engineer.homeLocation }}</p>
-          
-          <div class="workload-status mt-3">
-            <span class="detail-label">Active Workload:</span>
-            <span class="detail-val font-weight-bold">{{ activeTickets.length }} Active Tasks</span>
-          </div>
-
-          <div class="availability-toggle mt-3">
-            <button 
-              type="button" 
-              class="btn w-100" 
-              [class.btn-accent]="engineer.isAvailable" 
-              [class.btn-danger]="!engineer.isAvailable"
-              (click)="toggleAvailability()"
-            >
-              {{ engineer.isAvailable ? 'Status: AVAILABLE' : 'Status: UNAVAILABLE' }}
-            </button>
-            <p class="text-xs text-muted mt-1 text-center">
-              Toggle to set your dispatcher search status.
-            </p>
-          </div>
+      <div class="card" *ngIf="engineer">
+        <h3>My Dispatch Profile</h3>
+        <p><strong>{{ engineer.name }}</strong></p>
+        <p class="text-secondary" style="font-size: 0.85rem;">Specialization: {{ engineer.specialization || 'General' }}</p>
+        <p class="text-secondary" style="font-size: 0.85rem;">Base Area: {{ engineer.homeLocation }}</p>
+        <p class="text-secondary" style="font-size: 0.85rem; margin-top: 0.5rem;"><strong>Active Workload:</strong> {{ activeTickets.length }} active task(s)</p>
+        
+        <div style="margin-top: 1rem;">
+          <button 
+            type="button" 
+            class="btn w-100" 
+            [style.background-color]="engineer.isAvailable ? 'var(--success)' : 'var(--danger)'" 
+            [style.color]="'white'"
+            (click)="toggleAvailability()"
+          >
+            {{ engineer.isAvailable ? 'AVAILABLE FOR DISPATCH' : 'OFF DUTY / BUSY' }}
+          </button>
         </div>
       </div>
 
       <!-- Holiday / Leave Planner Card -->
       <div class="card" *ngIf="engineer">
-        <h2 class="gradient-text mb-2">Leave Planner</h2>
-        <p class="desc text-secondary text-sm mb-3">Plan your holidays so the dispatch system bypasses your assignments (FR13, FR19).</p>
+        <h3>Leave Planner</h3>
+        <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.75rem;">Plan holidays so the auto-assigner system bypasses you.</p>
         
         <form (ngSubmit)="saveHoliday()">
           <div class="form-group">
@@ -83,72 +66,67 @@
             >
           </div>
 
-          <div class="flex-between gap-1 mt-3">
-            <button type="button" class="btn btn-secondary btn-sm w-50" (click)="clearHoliday()">Clear</button>
-            <button type="submit" class="btn btn-primary btn-sm w-50">Apply</button>
+          <div class="flex-between mt-3">
+            <button type="button" class="btn btn-secondary" style="padding: 0.4rem; font-size: 0.85rem;" (click)="clearHoliday()">Clear</button>
+            <button type="submit" class="btn btn-primary" style="padding: 0.4rem; font-size: 0.85rem;">Apply</button>
           </div>
         </form>
       </div>
     </div>
 
-    <div class="tasks-panel">
+    <!-- Main Tasks Panel -->
+    <div>
       <!-- SECTION 1: PENDING ASSIGNMENTS -->
-      <div class="card mb-4" *ngIf="assignedTickets.length > 0">
-        <h2 class="text-danger mb-3">Pending Task Assignments</h2>
+      <div class="card" *ngIf="assignedTickets.length > 0">
+        <h3 class="text-danger">Pending Task Assignments</h3>
         
-        <div class="pending-list">
-          <div class="pending-item card mb-2" *ngFor="let t of assignedTickets">
-            <div class="pending-header">
-              <span class="type-tag" [class.installation]="t.ticketType === 'INSTALLATION'">{{ t.ticketType }}</span>
-              <span class="badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
-            </div>
-            
-            <div class="pending-body mt-2">
-              <p class="desc font-weight-bold">Ticket #{{ t.ticketId }} - {{ t.location }}</p>
-              <p class="detail text-secondary text-sm mt-1">{{ t.description }}</p>
-              <p class="time text-muted text-xs mt-1">Dispatched on: {{ t.createdAt | date:'medium' }}</p>
-            </div>
-            
-            <div class="pending-actions flex-between gap-1 mt-3">
-              <button class="btn btn-secondary btn-sm w-50" (click)="rejectTicket(t.ticketId!)" [disabled]="isActionLoading">
-                Reject / Decline
-              </button>
-              <button class="btn btn-accent btn-sm w-50" (click)="acceptTicket(t.ticketId!)" [disabled]="isActionLoading">
-                Accept Job
-              </button>
-            </div>
+        <div *ngFor="let t of assignedTickets" class="card" style="border-left: 4px solid var(--danger); padding: 1rem; margin-bottom: 0.75rem;">
+          <div class="flex-between">
+            <span class="badge badge-info">{{ t.ticketType }}</span>
+            <span class="badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+          </div>
+          
+          <p style="margin-top: 0.5rem;"><strong>Ticket #{{ t.ticketId }} - {{ t.location }}</strong></p>
+          <p class="text-secondary" style="font-size: 0.9rem; margin-top: 0.25rem;">{{ t.description }}</p>
+          <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.25rem;">Dispatched on: {{ t.createdAt | date:'medium' }}</p>
+          
+          <div class="flex-between mt-3">
+            <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" (click)="rejectTicket(t.ticketId!)" [disabled]="isActionLoading">
+              Reject / Decline
+            </button>
+            <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" (click)="acceptTicket(t.ticketId!)" [disabled]="isActionLoading">
+              Accept Job
+            </button>
           </div>
         </div>
       </div>
 
       <!-- SECTION 2: ACTIVE TASKS -->
-      <div class="card mb-4">
-        <h2 class="gradient-text mb-3">Active Operations</h2>
+      <div class="card">
+        <h3>Active Operations</h3>
         
-        <div class="empty-state text-center py-4" *ngIf="activeTickets.length === 0">
-          <p class="text-secondary font-weight-bold">No active tasks</p>
-          <p class="text-muted mt-1 text-sm">Accept pending assignments or contact admin for new dispatch schedules.</p>
+        <div class="text-center" style="padding: 1.5rem;" *ngIf="activeTickets.length === 0">
+          <p class="text-secondary">No active tasks.</p>
+          <p class="text-muted" style="font-size: 0.85rem;">Accept pending assignments or wait for admin dispatch.</p>
         </div>
 
-        <div class="active-list" *ngIf="activeTickets.length > 0">
-          <div class="active-item card mb-2" *ngFor="let t of activeTickets">
-            <div class="active-header flex-between">
+        <div *ngIf="activeTickets.length > 0">
+          <div *ngFor="let t of activeTickets" class="card" style="border-left: 4px solid var(--primary); padding: 1rem; margin-bottom: 0.75rem;">
+            <div class="flex-between">
               <div>
-                <span class="type-tag" [class.installation]="t.ticketType === 'INSTALLATION'">{{ t.ticketType }}</span>
-                <span class="badge ms-1" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+                <span class="badge badge-info">{{ t.ticketType }}</span>
+                <span class="badge" style="margin-left: 0.25rem;" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
               </div>
               <span class="badge" [ngClass]="getStatusClass(t.status)">{{ t.status }}</span>
             </div>
 
-            <div class="active-body mt-2">
-              <p class="desc font-weight-bold">Ticket #{{ t.ticketId }} - {{ t.location }}</p>
-              <p class="detail text-secondary text-sm mt-1">{{ t.description }}</p>
-              <p class="customer text-secondary text-sm" *ngIf="t.userName"><strong>Customer:</strong> {{ t.userName }}</p>
-            </div>
+            <p style="margin-top: 0.5rem;"><strong>Ticket #{{ t.ticketId }} - {{ t.location }}</strong></p>
+            <p class="text-secondary" style="font-size: 0.9rem; margin-top: 0.25rem;">{{ t.description }}</p>
+            <p class="text-secondary" style="font-size: 0.85rem;" *ngIf="t.userName"><strong>Customer Name:</strong> {{ t.userName }}</p>
 
-            <div class="active-actions mt-3">
+            <div style="margin-top: 1rem;">
               <button class="btn btn-primary w-100" *ngIf="t.status === 'ACCEPTED'" (click)="startWork(t.ticketId!)" [disabled]="isActionLoading">
-                Start Operations (IN_PROGRESS)
+                Start Operations (Mark IN PROGRESS)
               </button>
               <button class="btn btn-accent w-100" *ngIf="t.status === 'IN_PROGRESS'" (click)="openUpdateModal(t)">
                 Resolve / Update Status
@@ -160,10 +138,10 @@
 
       <!-- SECTION 3: COMPLETED HISTORY -->
       <div class="card">
-        <h2 class="gradient-text mb-3">Recent Tasks Log</h2>
+        <h3>Recent Tasks Log</h3>
 
-        <div class="empty-state text-center py-4" *ngIf="pastTickets.length === 0">
-          <p class="text-secondary font-weight-bold">No past operations records</p>
+        <div class="text-center" style="padding: 1.5rem;" *ngIf="pastTickets.length === 0">
+          <p class="text-secondary">No completed operations history.</p>
         </div>
 
         <div class="table-responsive" *ngIf="pastTickets.length > 0">
@@ -180,9 +158,7 @@
             <tbody>
               <tr *ngFor="let t of pastTickets">
                 <td>#{{ t.ticketId }}</td>
-                <td>
-                  <span class="type-tag" [class.installation]="t.ticketType === 'INSTALLATION'">{{ t.ticketType }}</span>
-                </td>
+                <td><strong>{{ t.ticketType }}</strong></td>
                 <td>{{ t.location }}</td>
                 <td><span class="badge" [ngClass]="getStatusClass(t.status)">{{ t.status }}</span></td>
                 <td>{{ t.updatedAt | date:'short' }}</td>
@@ -195,23 +171,21 @@
   </div>
 
   <!-- OPERATIONS STATUS UPDATE MODAL (SUCCESS/FAILURE/DEFERRED) -->
-  <div class="modal-backdrop flex-center" *ngIf="selectedTicket">
-    <div class="card modal-card">
-      <div class="modal-header">
-        <h2 class="gradient-text">Complete Task #{{ selectedTicket.ticketId }}</h2>
-        <button class="btn-close" (click)="closeUpdateModal()">×</button>
+  <div *ngIf="selectedTicket" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="card" style="max-width: 500px; width: 90%; background: white;">
+      <div class="flex-between mb-3" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <h3>Complete Task #{{ selectedTicket.ticketId }}</h3>
+        <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem;" (click)="closeUpdateModal()">X</button>
       </div>
 
-      <div class="modal-body">
-        <div class="ticket-summary card mb-3">
-          <p class="text-sm"><span class="text-muted">Customer:</span> <strong>{{ selectedTicket.userName }}</strong></p>
-          <p class="text-sm"><span class="text-muted">Type:</span> <strong>{{ selectedTicket.ticketType }}</strong></p>
-          <p class="text-sm"><span class="text-muted">Location:</span> <strong>{{ selectedTicket.location }}</strong></p>
-        </div>
+      <div>
+        <p><strong>Customer:</strong> {{ selectedTicket.userName }}</p>
+        <p><strong>Type:</strong> {{ selectedTicket.ticketType }}</p>
+        <p><strong>Location:</strong> {{ selectedTicket.location }}</p>
 
         <form (ngSubmit)="submitStatusUpdate()">
-          <div class="form-group">
-            <label class="form-label" for="operationStatus">Operation Result Status (FR18.1)</label>
+          <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label" for="operationStatus">Operation Result Status</label>
             <select id="operationStatus" name="operationStatus" class="form-control" [(ngModel)]="statusUpdate.status" required>
               <option value="SUCCESS">SUCCESS (Issue resolved completely)</option>
               <option value="FAILURE">FAILURE (Could not resolve / Equipment fault)</option>
@@ -220,23 +194,23 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="feedbackNotes">Operations Report & Feedback Notes</label>
+            <label class="form-label" for="feedbackNotes">Operations Report / Notes</label>
             <textarea 
               id="feedbackNotes" 
               name="feedbackNotes" 
               class="form-control" 
               rows="4" 
-              placeholder="Provide details on action taken, equipment replaced, or hazard causes leading to failure/deferral..."
+              placeholder="Provide details on action taken, causes of failure or deferral..."
               [(ngModel)]="statusUpdate.notes"
               required
             ></textarea>
           </div>
 
-          <div class="flex-between gap-1 mt-4">
-            <button type="button" class="btn btn-secondary w-50" (click)="closeUpdateModal()">Cancel</button>
-            <button type="submit" class="btn btn-accent w-50" [disabled]="isActionLoading">
+          <div class="flex-between mt-4">
+            <button type="button" class="btn btn-secondary" (click)="closeUpdateModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isActionLoading">
               <span *ngIf="!isActionLoading">Submit Report</span>
-              <span *ngIf="isActionLoading" class="spinner"></span>
+              <span *ngIf="isActionLoading">Submitting...</span>
             </button>
           </div>
         </form>

@@ -6,6 +6,12 @@ import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import CryptoJS from 'crypto-js';
 
+// ----------------------------------------------------
+// VIVA EXPLANATION: What does ProfileComponent do?
+// - Purpose: Allows the current logged-in user (Customer, Engineer, or Admin) to view and edit their profile details.
+// - Session Binding: Fetches info from the backend using the userId stored in localStorage.
+// - Password Update: If the user types a new password, it is hashed client-side with SHA-256 before saving.
+// ----------------------------------------------------
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -32,6 +38,7 @@ export class ProfileComponent implements OnInit {
     private router: Router
   ) {}
 
+  // VIVA EXPLANATION: On initialisation, retrieve user session from localStorage, and hit the Auth API on port 8081 to load active profile details.
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
@@ -55,12 +62,14 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  // VIVA EXPLANATION: Saves the modified profile fields to the database.
   onSubmit(): void {
     if (!this.user || !this.user.userId) return;
 
     this.errorMessage = null;
     this.successMessage = null;
 
+    // VIVA EXPLANATION: Validate passwords if changing them.
     if (this.profileForm.password) {
       if (this.profileForm.password.length < 6) {
         this.errorMessage = 'Password must be at least 6 characters.';
@@ -74,30 +83,33 @@ export class ProfileComponent implements OnInit {
 
     this.isLoading = true;
 
+    // Prepare JSON payload for the PUT update request
     const updateData: any = {
       name: this.profileForm.name,
       phone: this.profileForm.phone,
       address: this.profileForm.address
     };
 
+    // VIVA EXPLANATION: Encrypt password client-side using SHA-256 before submitting to the backend.
     if (this.profileForm.password) {
       updateData.password = CryptoJS.SHA256(this.profileForm.password).toString();
     }
 
+    // VIVA EXPLANATION: Calls PUT endpoint on the Auth microservice.
     this.authService.updateProfile(this.user.userId, updateData).subscribe({
       next: (updatedUser) => {
         this.isLoading = false;
         this.successMessage = 'Profile updated successfully!';
         this.user = updatedUser;
         
-        // Update user session name if changed
+        // VIVA EXPLANATION: Update local session storage metadata in case the user changed their display name.
         const session = this.authService.getCurrentUser();
         if (session) {
           session.name = updatedUser.name;
           this.authService.saveSession(session);
         }
         
-        // Clear passwords
+        // Clear passwords fields
         this.profileForm.password = '';
         this.profileForm.confirmPassword = '';
       },
